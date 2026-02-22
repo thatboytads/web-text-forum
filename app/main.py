@@ -1,11 +1,13 @@
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from app.db import models, session
 from app.schemas import forum as schemas
 from app.core import security, config
+from app.core.vibe_model import predict_vibe
 from app.db.session import engine, get_db
 
 # Create database tables
@@ -17,6 +19,14 @@ app = FastAPI(
     description="Backend for a forum application with posts, comments, likes, and moderation."
 )
 
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200", "http://localhost:4000"],  # Angular dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Authentication Endpoints
 
@@ -52,9 +62,11 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=config.settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username, "role": user.role.value, "user_id": user.id},
+        expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 
 # Post Endpoints
@@ -68,6 +80,9 @@ def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         likes_count = db.query(models.Like).filter(models.Like.post_id == post.id).count()
         post_data = schemas.Post.model_validate(post)
         post_data.likes_count = likes_count
+        vibe = predict_vibe([comment.content for comment in post_data.comments])
+        post_data.vibe_label = vibe.label.capitalize()
+        post_data.vibe_emoji = vibe.emoji
         results.append(post_data)
 
     return results
@@ -82,6 +97,9 @@ def read_post(post_id: int, db: Session = Depends(get_db)):
     likes_count = db.query(models.Like).filter(models.Like.post_id == post.id).count()
     post_data = schemas.Post.model_validate(post)
     post_data.likes_count = likes_count
+    vibe = predict_vibe([comment.content for comment in post_data.comments])
+    post_data.vibe_label = vibe.label.capitalize()
+    post_data.vibe_emoji = vibe.emoji
     return post_data
 
 

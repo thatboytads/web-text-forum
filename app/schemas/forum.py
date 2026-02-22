@@ -53,5 +53,7 @@ class Post(PostBase):
     created_at: datetime
     comments: List[Comment] = []
     likes_count: int = 0
-    
+    vibe_label: str = "Neutral"
+    vibe_emoji: str = "😐"
+
     model_config = ConfigDict(from_attributes=True)

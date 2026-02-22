@@ -1,0 +1,68 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="logo-section">
+      <div class="logo">
+        <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="45" stroke="#4CAF50" stroke-width="4"/>
+          <path d="M30 50 L45 65 L70 35" stroke="#4CAF50" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <h1 class="company-name">TruthForum</h1>
+      <p class="tagline">Where facts meet community</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          [(ngModel)]="username"
+          placeholder="Enter your username"
+          required
+          [disabled]="isLoading"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="Enter your password"
+          required
+          [disabled]="isLoading"
+        />
+      </div>
+
+      <div *ngIf="isRegisterMode" class="form-group">
+        <label for="role">Role</label>
+        <select
+          id="role"
+          name="role"
+          [(ngModel)]="selectedRole"
+          [disabled]="isLoading"
+        >
+          <option [ngValue]="roles.REGULAR">Regular</option>
+          <option [ngValue]="roles.MODERATOR">Moderator</option>
+        </select>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <button type="submit" class="login-button" [disabled]="isLoading">
+        <span *ngIf="!isLoading">{{ isRegisterMode ? 'Create Account' : 'Log In' }}</span>
+        <span *ngIf="isLoading">{{ isRegisterMode ? 'Creating account...' : 'Logging in...' }}</span>
+      </button>
+
+      <button type="button" class="toggle-button" (click)="toggleMode()" [disabled]="isLoading">
+        {{ isRegisterMode ? 'Already have an account? Log in' : 'New here? Create an account' }}
+      </button>
+    </form>
+  </div>
+</div>
